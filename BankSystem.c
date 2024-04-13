@@ -1,12 +1,26 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "BankSys.h"
 
+#define MAX_NO_OF_ACCOUNTS 100
 int main()
 {
     unsigned char userType;
-    back_account_t *bank_database[100]; // create array of struct pointer to store users
+    back_account_t bank_database[MAX_NO_OF_ACCOUNTS] =
+        {
+            {"Sherlock Holmes",
+             "55 st",
+             20106740299827,
+             30,
+             1001430005,
+             "False",
+             0,
+             "Active",
+             5000000,
+             1234}}; // create array of structs to store users
     int account_index = 0;
+
     while (1)
     {
         printf("\t---------------------- BANK SYSTEM ----------------------\n");
@@ -25,9 +39,8 @@ int main()
                 switch (op)
                 {
                 case 1:
-                    bank_database[account_index] = create_new_account();
-                    DisplayInfo(bank_database[account_index]);
-                    account_index++;
+                    create_new_account(bank_database, &account_index);
+                    DisplayInfo(bank_database[account_index - 1]);
                     break;
 
                 case 2:
@@ -40,7 +53,7 @@ int main()
                     printf("%d\n", acc_index);
                     while (op != 5)
                     {
-                        printf("\t\n---------------------------------------------------------------\n");
+                        printf("\t---------------------------------------------------------------\n");
                         printf("1-Make Transaction\n2-Change Account Status\n3-Get Cash\n4-Deposit in Account\n5-Return to main menu\n6-Display Account Info\n");
                         scanf("%d", &op);
                         switch (op)
@@ -48,7 +61,9 @@ int main()
                         case 1:
                             make_transaction(&bank_database[acc_index], bank_database);
                             break;
-
+                        case 2:
+                            change_account_status(bank_database, acc_index);
+                            break;
                         case 5:
                             op = 5;
                             break;
@@ -78,57 +93,55 @@ int main()
     return 0;
 }
 
-back_account_t create_new_account(void)
+void create_new_account(back_account_t new_account[], int *ptr_account_index)
 {
-    back_account_t new_account;
     printf("Full Name: ");
-    scanf("%[^\n]", new_account.full_name);
+    scanf("%[^\n]", new_account[(*ptr_account_index)].full_name);
 
     printf("Address: ");
     getchar();
-    scanf("%[^\n]%*c", new_account.address);
+    scanf("%[^\n]%*c", new_account[(*ptr_account_index)].address);
 
     printf("Age: ");
-    scanf("%d", &new_account.age);
+    scanf("%d", &new_account[(*ptr_account_index)].age);
 
-    if (new_account.age < 21)
+    if (new_account[(*ptr_account_index)].age < 21)
     {
-        new_account.guardian = "True";
-        new_account.national_id = 0;
+        new_account[(*ptr_account_index)].guardian = "True";
+        new_account[(*ptr_account_index)].national_id = 0;
         printf("Guardian National ID: ");
-        scanf("%d", &new_account.guardian_national_id);
+        scanf("%d", &new_account[(*ptr_account_index)].guardian_national_id);
     }
     else
     {
-        new_account.guardian = "False";
-        new_account.guardian_national_id = 0;
+        new_account[(*ptr_account_index)].guardian = "False";
+        new_account[(*ptr_account_index)].guardian_national_id = 0;
         printf("National ID: ");
-        scanf("%lld", &new_account.national_id);
+        scanf("%lld", &new_account[(*ptr_account_index)].national_id);
     }
     printf("Balance: ");
-    scanf("%lf", &new_account.balance);
+    scanf("%lf", &new_account[(*ptr_account_index)].balance);
 
     /*** Automatically generated ***/
-    new_account.account_status = "Active";
-    new_account.bank_account_id = 1000000000 + (new_account.national_id % 15) + (new_account.age * 1000) + (rand() % 20 * 100000);
-    new_account.password = 1000 + (rand() % 9 * 1000) + (rand() % 30);
-
-    return new_account;
+    new_account[(*ptr_account_index)].account_status = "Active";
+    new_account[(*ptr_account_index)].bank_account_id = 1000000000 + (new_account[(*ptr_account_index)].national_id % 15) + (new_account[(*ptr_account_index)].age * 1000) + (rand() % 20 * 100000);
+    new_account[(*ptr_account_index)].password = 1000 + (rand() % 9 * 1000) + (rand() % 30);
+    (*ptr_account_index)++;
 }
 
-void DisplayInfo(back_account_t *new_account)
+void DisplayInfo(back_account_t new_account)
 {
-    printf("---------------------- Account Info ----------------------\n");
-    printf("Full Name: %s\n", new_account->full_name);
-    printf("Address: %s\n", new_account->address);
-    printf("Age: %d\n", new_account->age);
-    printf("Guardian: %s\n", new_account->guardian);
-    printf("Guardian National ID: %d\n", new_account->guardian_national_id);
-    printf("National ID: %lld\n", new_account->national_id);
-    printf("Balance: %0.4lf\n", new_account->balance);
-    printf("Account Status: %s\n", new_account->account_status);
-    printf("Bank Account ID: %lld\n", new_account->bank_account_id);
-    printf("Password: %d\n", new_account->password);
+    printf("\t---------------------- Account Info ----------------------\n");
+    printf("Full Name: %s\n", new_account.full_name);
+    printf("Address: %s\n", new_account.address);
+    printf("Age: %d\n", new_account.age);
+    printf("Guardian: %s\n", new_account.guardian);
+    printf("Guardian National ID: %d\n", new_account.guardian_national_id);
+    printf("National ID: %lld\n", new_account.national_id);
+    printf("Balance: %0.4lf\n", new_account.balance);
+    printf("Account Status: %s\n", new_account.account_status);
+    printf("Bank Account ID: %lld\n", new_account.bank_account_id);
+    printf("Password: %d\n", new_account.password);
 }
 
 void make_transaction(back_account_t *from_account, back_account_t bank_database[])
@@ -145,7 +158,7 @@ void make_transaction(back_account_t *from_account, back_account_t bank_database
         // Search inside bank database
         if (amount < from_account->balance)
         {
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < MAX_NO_OF_ACCOUNTS; i++)
             {
                 if (to_bank_account_id == bank_database[i].bank_account_id)
                 {
@@ -185,4 +198,22 @@ int acount_id_to_bank_database_index(unsigned long int account_id, back_account_
         }
     }
     return -1; // account doesn't exist
+}
+void change_account_status(back_account_t *account, int account_index)
+{
+    int op;
+    printf("Change account status to:\n1-Active\n2-Restricted\n3-Closed\n");
+    scanf("%d", &op);
+    switch (op)
+    {
+    case 1:
+        account[account_index].account_status = "Active";
+        break;
+    case 2:
+        account[account_index].account_status = "Restricted";
+        break;
+    case 3:
+        account[account_index].account_status = "Closed";
+        break;
+    }
 }
