@@ -18,8 +18,18 @@ int main()
              0,
              "Active",
              5000000,
-             1234}}; // create array of structs to store users
-    int account_index = 1;
+             1234},
+            {"Georgie Eaton",
+             "52 st",
+             30106250209529,
+             28,
+             1001528010,
+             "False",
+             0,
+             "Active",
+             40000000,
+             5034}}; // create array of structs to store users
+    int account_index = 2;
 
     while (1)
     {
@@ -45,12 +55,14 @@ int main()
 
                 case 2:
                     int op = 0;
-                    int acc_index;
+                    int acc_index = 0;
                     unsigned long int bank_account_id;
                     printf("Enter Client Bank Account ID: ");
                     scanf("%ld", &bank_account_id);
                     acc_index = acount_id_to_bank_database_index(bank_account_id, bank_database);
-                    while (op != 6)
+                    printf("\t -----------------------------------------\n");
+                    printf("\t------> Mr/Mrs %s <------\n", bank_database[acc_index].full_name);
+                    while (op != 6 && (acc_index != -1))
                     {
                         printf("\t---------------------------------------------------------------\n");
                         printf("1-Make Transaction\n2-Change Account Status\n3-Get Cash\n4-Deposit in Account\n5-Display Account Info\n6-Return to main menu\n");
@@ -58,7 +70,19 @@ int main()
                         switch (op)
                         {
                         case 1:
-                            make_transaction(&bank_database[acc_index], bank_database);
+                            if (bank_database[acc_index].account_status == "Active")
+                            {
+                                unsigned long int to_bank_account_id;
+                                int to_acc_index;
+                                printf("Enter Bank Account ID you want to transfer money to: ");
+                                scanf("%ld", &to_bank_account_id);
+                                to_acc_index = acount_id_to_bank_database_index(to_bank_account_id, bank_database);
+                                make_transaction(&bank_database[acc_index], &bank_database[to_acc_index]);
+                            }
+                            else
+                            {
+                                printf("Transaction couldn't be completed, your account isn't Active\n");
+                            }
                             break;
                         case 2:
                             change_account_status(&bank_database[acc_index]);
@@ -101,7 +125,7 @@ int main()
             {
                 printf("\t -----------------------------------------\n");
                 printf("\t------> Welcome %s <------\n", bank_database[acc_index].full_name);
-                while (op != 6)
+                while (op != 6 && (acc_index != -1))
                 {
                     printf("\t---------------------------------------------------------------\n");
                     printf("1-Make Transaction\n2-Change Account Password\n3-Get Cash\n4-Deposit in Account\n5-Display Account Info\n6-Return to main menu\n");
@@ -109,7 +133,19 @@ int main()
                     switch (op)
                     {
                     case 1:
-                        make_transaction(&bank_database[acc_index], bank_database);
+                        if (bank_database[acc_index].account_status == "Active")
+                        {
+                            unsigned long int to_bank_account_id;
+                            int to_acc_index;
+                            printf("Enter Bank Account ID you want to transfer money to: ");
+                            scanf("%ld", &to_bank_account_id);
+                            to_acc_index = acount_id_to_bank_database_index(to_bank_account_id, bank_database);
+                            make_transaction(&bank_database[acc_index], &bank_database[to_acc_index]);
+                        }
+                        else
+                        {
+                            printf("Transaction couldn't be completed, your account isn't Active\n");
+                        }
                         break;
                     case 2:
                         change_password(&bank_database[acc_index]);
@@ -142,9 +178,23 @@ int main()
 
 void create_new_account(back_account_t new_account[], int *ptr_account_index)
 {
-    printf("Full Name: ");
-    scanf("%[^\n]", new_account[(*ptr_account_index)].full_name);
-
+    int No_of_spaces = 0;
+    // You must enter at least first four names
+    while (1)
+    {
+        printf("Full Name: ");
+        scanf("%[^\n]", new_account[(*ptr_account_index)].full_name);
+        getchar();
+        for (int i = 0; new_account[(*ptr_account_index)].full_name[i] != '\0'; i++)
+        {
+            if (new_account[(*ptr_account_index)].full_name[i] == ' ')
+                No_of_spaces++;
+        }
+        if (No_of_spaces >= 3)
+            break;
+        else
+            No_of_spaces = 0;
+    }
     printf("Address: ");
     getchar();
     scanf("%[^\n]%*c", new_account[(*ptr_account_index)].address);
@@ -191,47 +241,28 @@ void DisplayInfo(back_account_t new_account)
     printf("Password: %d\n", new_account.password);
 }
 
-void make_transaction(back_account_t *from_account, back_account_t bank_database[])
+void make_transaction(back_account_t *from_account, back_account_t *to_account)
 {
-    unsigned long int to_bank_account_id;
     double amount;
-    if (from_account->account_status == "Active")
-    {
-        printf("Enter Bank Account ID you want to transfer money to: ");
-        scanf("%ld", &to_bank_account_id);
-        printf("Amount: ");
-        scanf("%ld", &amount);
+    printf("Amount: ");
+    scanf("%lf", &amount);
 
-        // Search inside bank database
-        if (amount < from_account->balance)
+    if (amount < from_account->balance)
+    {
+        if (to_account->account_status == "Active")
         {
-            for (int i = 0; i < MAX_NO_OF_ACCOUNTS; i++)
-            {
-                if (to_bank_account_id == bank_database[i].bank_account_id)
-                {
-                    if (bank_database[i].account_status == "Active")
-                    {
-                        bank_database[i].balance += amount;
-                        from_account->balance -= amount;
-                        printf("Transaction Completed\n");
-                        break;
-                    }
-                    else
-                    {
-                        printf("Transaction couldn't be completed, you're transfering to an inactive account\n");
-                        break;
-                    }
-                }
-            }
+            to_account->balance += amount;
+            from_account->balance -= amount;
+            printf("Transaction Completed\n");
         }
         else
         {
-            printf("Transaction couldn't be completed, your balance isn't enough\n");
+            printf("Transaction couldn't be completed, you're transfering to an inactive account\n");
         }
     }
     else
     {
-        printf("Transaction couldn't be completed, your account isn't Active\n");
+        printf("Transaction couldn't be completed, your balance isn't enough\n");
     }
 }
 
@@ -290,18 +321,20 @@ void deposit(back_account_t *account)
 }
 void change_password(back_account_t *account)
 {
-    int new_password_1, new_password_2;
+    int old_password, new_password_1, new_password_2;
+    printf("Old password: ");
+    scanf("%d", &old_password);
     printf("New password: ");
     scanf("%d", &new_password_1);
     printf("New password: ");
     scanf("%d", &new_password_2);
-    if (new_password_1 == new_password_2)
+    if ((old_password == account->password) && (new_password_1 == new_password_2))
     {
         account->password = new_password_1;
         printf("\nPassword changed successfully\n");
     }
     else
     {
-        printf("Can't change password\n");
+        printf("Password can't be changed\n");
     }
 }

@@ -14,7 +14,7 @@ typedef struct
 
 void create_new_account(back_account_t new_account[], int *ptr_account_index);
 void DisplayInfo(back_account_t new_account);
-void make_transaction(back_account_t *from_account, back_account_t bank_database[]);
+void make_transaction(back_account_t *from_account, back_account_t *to_account);
 void change_account_status(back_account_t *account);
 void get_cash(back_account_t *account);
 void deposit(back_account_t *account);
